@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<style>
+tr.dataRow{
+	height:"150px";
+    min-height: "150px";
+}
+	
+</style>
+
+<html>
+    
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title></title>
+        <meta name="description" content="An interactive getting started guide for Brackets.">
+       
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    </head>
+    <body>
+        <script type="text/javascript">
+            var html_text="";
+
+		function is_all_ws( nod )
+	{
+  		// Use ECMA-262 Edition 3 String and RegExp features
+  		return !(/[^\t\n\r ]/.test(nod.textContent));
+	}
+
+
+		function is_ignorable( nod )
+	{
+  			return ( nod.nodeType == 8) || // A comment node
+         ( (nod.nodeType == 3) && is_all_ws(nod) ); // a text node, all ws
+	}
+
+	
+function last_child( par )
+{
+  var res=par.lastChild;
+  while (res) {
+    if (!is_ignorable(res)) return res;
+    res = res.previousSibling;
+  }
+  return null;
+}
+
+
+function first_child( par )
+{
+  var res=par.firstChild;
+  while (res) {
+    if (!is_ignorable(res)) return res;
+    res = res.nextSibling;
+  }
+  return null;
+}
+
+
+function data_of( txt )
+{
+  var data = txt.textContent;
+  // Use ECMA-262 Edition 3 String and RegExp features
+
+  data = data.replace(/[\t\n\r ]+/g, " ");
+  if (data.charAt(0) == " ")
+    data = data.substring(1, data.length);
+  if (data.charAt(data.length - 1) == " ")
+    data = data.substring(0, data.length - 1);
+  return data;
+}
+		
+		
+            function loadXML(url) {
+        	
+                                    if (window.XMLHttpRequest)
+                                        {
+                                         var xmlhttp=new XMLHttpRequest();  
+                                        }
+                                    else {
+                                        var xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");  
+                                          }
+              
+                                            xmlhttp.open("GET",url,false);
+                                            xmlhttp.send();
+                
+                                            if(xmlhttp.status== 404){
+												
+                                               // xml not found
+                                                return null;
+                                            }
+                                            var xmlDoc=xmlhttp.responseXML;
+                                            return xmlDoc;
+       
+                
+        }
+  
+            function viewXML(){
+            
+                    
+                                        var URL = $('input[name=XMLURL]').val();
+										if(URL.length ==0 ){
+											window.alert('Please enter a URL value for the xml file');
+                                            return;
+											
+										}
+                                        var xmlDoc = loadXML(URL);
+                
+                                        	if(xmlDoc == null){
+                                            window.alert('Please check the url entered. The XML file does not exists');
+                                            return;
+                                        	}
+                
+                                            xmlDoc.onload=generateHTML(xmlDoc);
+                
+                                            var parsingError = xmlDoc.getElementsByTagName("parsererror");
+                                            if(parsingError.length > 0){
+                                                                            window.alert("Invalid XML")
+                                                                            return;
+                                            }  
+                
+                							 var dataRow = xmlDoc.getElementsByTagName("Row");
+                                             if(dataRow.length == 0){
+                                                 window.alert("Invalid XML. Does not contains row entries")
+                                                                            return;
+                                             }
+                
+                                           
+                                            var hWin = window.open("", "Assignment4", "height=800,width=800,scrollbars=1,resizable=1");
+                                            hWin.document.write(html_text);  
+                                             
+                                        	hWin.document.close();  
+            }
+            
+            function generateHTML(xmlDoc)
+            { 
+      
+                html_text="<div style='width:80%;margin:auto;'><table border='1px' width='100%'><tbody>";
+                
+                var tableHeader = '<tr>';
+                var headerRow = xmlDoc.getElementsByTagName("Data");
+				
+	
+                 for(var i=0 ; i<headerRow.length; i++){
+                    if( headerRow.item(i).nodeType == 1){
+                       
+					   var firstChild = first_child(headerRow.item(i));
+					   var textValue = data_of(firstChild);
+					  
+                        tableHeader=tableHeader+'<td style="font-weight:bold;text-align:center;">'+textValue+'</td>';
+                    }
+                }
+                tableHeader=tableHeader+'</tr>';
+                
+                var tableRows ='';
+                var dataRow = xmlDoc.getElementsByTagName("Row");
+               
+                for(var i=0 ; i<dataRow.length; i++){
+                    tableRows=tableRows+'<tr class="dataRow">';
+                    var childElements = dataRow.item(i).childNodes;
+                    for(var j=0;j<childElements.length;j++){
+                        if(childElements.item(j).nodeType==1){
+							
+							 var firstChild = '';
+					   		var textValue = '';
+                            if(childElements.item(j).nodeName=="Slot"){
+								    firstChild = first_child(childElements.item(j));
+                                    if(firstChild==null){
+                                        textValue='';
+                                    } else{
+					   				    textValue = data_of(firstChild);
+                                    }
+                                    
+                                tableRows=tableRows+'<td height="150px" width="10%" style="padding-left:4px;" >'+ textValue+'</td>';
+                                
+                            } else if(childElements.item(j).nodeName=="Newspaper"){
+                                firstChild = first_child(childElements.item(j));
+                                    if(firstChild==null){
+                                        textValue='';
+                                    } else{
+					   				    textValue = data_of(firstChild);
+                                    }
+                                tableRows=tableRows+'<td height="150px" style="padding-left:4px;" >'+ textValue+'</td>';
+                                
+                            } else if(childElements.item(j).nodeName=="Location"){
+                                
+                                var locationChildren = childElements.item(j).childNodes;
+                                
+                                if(locationChildren.length>0){
+                                    tableRows=tableRows+'<td height="150px" > <ul >';
+                                for(var k=0;k<locationChildren.length;k++){
+                                    if(locationChildren.item(k).nodeType==1){
+                                         if(locationChildren.item(k).nodeName=="City"){
+                                             
+                                             firstChild = first_child(locationChildren.item(k));
+                                            if(null!=firstChild){
+                                                 textValue = data_of(firstChild);
+                                                tableRows=tableRows+'<li>'+textValue+'</li>';
+                                             } 
+                                            
+                                         }
+                                         if(locationChildren.item(k).nodeName=="State"){
+                                             
+                                             firstChild = first_child(locationChildren.item(k));
+                                             if(null!=firstChild){
+                                                 textValue = data_of(firstChild);
+                                             tableRows=tableRows+'<li>'+textValue+'</li>';
+                                             }
+                                         }
+                                    }
+                                    
+                                }
+                                     tableRows=tableRows+'</ul></td>';
+                                } else{
+                                    tableRows=tableRows+'<td height="150px" > </td>';
+                                }
+                                //tableRows=tableRows+'<td>'+ childElements.item(j).firstChild.nodeValue+'</td>';
+                                
+                            }else if(childElements.item(j).nodeName=="HomePage"){
+                                
+                                 firstChild = first_child(childElements.item(j));
+                                    if(firstChild==null){
+                                        tableRows=tableRows+'<td height="150px" > </td>';
+                                    } else{
+					   				    textValue = data_of(firstChild);
+                                        tableRows=tableRows+'<td height="150px" style="padding-left:4px;" ><a href="'+ textValue+'">'+textValue+'</a></td>';
+                                    }
+                                
+                            }else if(childElements.item(j).nodeName=="Logo"){
+                                
+                                firstChild = first_child(childElements.item(j));
+                                    if(firstChild==null){
+                                        tableRows=tableRows+'<td height="150px" > </td>';
+                                    } else{
+					   				    textValue = data_of(firstChild);
+                                        tableRows=tableRows+'<td height="150px"  width="20%"> <img height="150px" width="100%" src="'+ childElements.item(j).firstChild.nodeValue+'"/></td>';
+                                    }
+                            }
+                            
+                        }
+                        
+                    }
+                    tableRows =tableRows+'</tr>';
+                }
+                
+                
+                html_text+=tableHeader+tableRows+'</tbody></table></div>';
+             }
+           
+
+            
+        </script>
+        <div style="margin:auto;width:80%;text-align:center;">
+        
+        <h1> Enter URL for NewsPaper List XML File </h1>
+        
+            <form name="myform" method="POST" >
+            <input type="text" name="XMLURL" maxlength="255" size="100" value="" />
+                <br>
+                <br>
+            <input type="button" name="submit" value="Submit Query" onClick="viewXML()" />
+            </form>
+            </div>
+
+        
+     <NOSCRIPT>  
+    </body>
+</html>
+
